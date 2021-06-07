@@ -59,6 +59,7 @@
   "files": [
     "dist"
   ],
+  "exports": "./dist/index.js",
   "dependencies": {
   }
 }
