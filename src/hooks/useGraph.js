@@ -7,27 +7,32 @@ function useGraph({
   const { accessToken } = useAcquireToken({ scopes: ['User.Read'] });
   const [graphData, setGraphData] = useState(null);
   const [error, setError] = useState(null);
-  // console.log({ accessToken });
 
   const getData = useCallback(
-    async (accessToken) => {
-      return fetch(graphEndpoint, {
-        method: 'GET',
-        headers: {
-          Authorization: 'Bearer ' + accessToken
-        }
-      })
-        .then((response) => response.json())
-        .then(setGraphData)
-        .catch(setError);
+    async (accessToken, controller) => {
+      try {
+        const response = await fetch(graphEndpoint, {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer ' + accessToken
+          },
+          signal: controller.signal
+        });
+        const body = await response.json();
+
+        setGraphData(body);
+      } catch (error) {
+        setError(error);
+      }
     },
     [graphEndpoint]
   );
 
   useEffect(() => {
-    if (accessToken) {
-      getData(accessToken);
-    }
+    const controller = new AbortController();
+    if (accessToken) getData(accessToken, controller);
+
+    return () => controller.abort();
   }, [accessToken, getData]);
 
   return { graphData, error };

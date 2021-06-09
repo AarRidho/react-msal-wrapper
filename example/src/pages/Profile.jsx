@@ -19,20 +19,22 @@ import { useAcquireToken, useGraph } from 'react-msal-wrapper';
 import { Button } from '@material-ui/core';
 
 const ProfileContent = () => {
-  const { graphData } = useGraph();
   const { accessToken } = useAcquireToken({ scopes: apiConfig.scopes });
+  const { graphData } = useGraph();
   const [accessGranted, setAccessGranted] = useState(false);
   const [data, setData] = useState(false);
   const [errorApi, setErrorApi] = useState(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const getDataFromApi = async () => {
       try {
         const response = await fetch(apiConfig.apiURL, {
           method: 'GET',
           headers: {
             Authorization: 'Bearer ' + accessToken
-          }
+          },
+          signal: controller.signal
         });
 
         const body = await response.json();
@@ -47,7 +49,9 @@ const ProfileContent = () => {
       }
     };
 
-    getDataFromApi();
+    if (accessToken) getDataFromApi();
+
+    return () => controller.abort();
   }, [accessToken]);
 
   return (

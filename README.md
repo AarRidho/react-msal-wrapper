@@ -207,7 +207,7 @@ When requesting a token, scopes with `'User.Read'` will change your token into v
 
 You should request a standalone token with your exposed API Scopes for every request that is going to your service
 
-Your Exposed API Scopes will make the token turns into v2, example:
+Your Exposed API Scopes will make the token turns into v2, for example:
 
 ```jsx
 // You could use useAcquireToken with your service scopes in it
