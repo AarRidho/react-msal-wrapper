@@ -1,6 +1,6 @@
 {
   "name": "react-msal-wrapper",
-  "version": "1.2.0",
+  "version": "1.3.1",
   "description": "Component that wrap your app with msal library graph-ms",
   "author": "AarRidho",
   "license": "MIT",
