@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useMsal } from '@azure/msal-react';
 
-function useAcquireToken({ scopes = ['User.Read'] }) {
+function useAcquireToken({ scopes = ['User.Read'], account = null }) {
   const { instance, inProgress, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState(null);
 
   const getData = useCallback(async () => {
-    if (inProgress === 'none' && accounts.length > 0) {
+    if (inProgress === 'none' && (account || accounts.length > 0)) {
       // Retrieve an access token
       try {
         const response = await instance.acquireTokenSilent({
-          account: accounts[0],
+          account: account || accounts[0],
           scopes
         });
 
@@ -29,7 +29,7 @@ function useAcquireToken({ scopes = ['User.Read'] }) {
         return null;
       }
     }
-  }, [accessToken, accounts, inProgress, instance, scopes]);
+  }, [accessToken, account, accounts, inProgress, instance, scopes]);
 
   useEffect(() => {
     getData();
