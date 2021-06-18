@@ -1,36 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMsal } from '@azure/msal-react';
 
 function useAcquireToken({ scopes = ['User.Read'] }) {
   const { instance, inProgress, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState(null);
 
-  useEffect(() => {
-    const getData = async () => {
-      if (inProgress === 'none' && accounts.length > 0) {
-        // Retrieve an access token
-        try {
-          const response = await instance.acquireTokenSilent({
-            account: accounts[0],
-            scopes
-          });
+  const getData = useCallback(async () => {
+    if (inProgress === 'none' && accounts.length > 0) {
+      // Retrieve an access token
+      try {
+        const response = await instance.acquireTokenSilent({
+          account: accounts[0],
+          scopes
+        });
 
-          if (response.accessToken) {
-            // console.info({ response });
-            setAccessToken(response.accessToken);
-            return;
-          }
-          setAccessToken(null);
-        } catch (error) {
-          if (accessToken) setAccessToken(null);
+        if (response.accessToken) {
+          // console.info({ response });
+          setAccessToken(response.accessToken);
+          return response.accessToken;
         }
-      }
-    };
 
-    getData();
+        // console.info({ response });
+        setAccessToken(null);
+        return null;
+      } catch (error) {
+        // console.log(error);
+        if (accessToken) setAccessToken(null);
+        return null;
+      }
+    }
   }, [accessToken, accounts, inProgress, instance, scopes]);
 
-  return { accessToken };
+  useEffect(() => {
+    getData();
+  }, [getData]);
+
+  // console.warn({ accessToken });
+  return { accessToken, getAccessToken: getData };
 }
 
 export default useAcquireToken;
