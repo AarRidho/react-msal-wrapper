@@ -13,7 +13,7 @@ function useAcquireToken({
     if (inProgress === 'none' && (account || accounts.length > 0)) {
       // Retrieve an access token
       const request = {
-        account: account || accounts[0],
+        account: account ?? accounts[0],
         scopes
       };
 
