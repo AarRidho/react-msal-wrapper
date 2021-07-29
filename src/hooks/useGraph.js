@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import useAcquireToken from './useAcquireToken';
 
 function useGraph({
+  scopes = ['User.Read'],
   graphEndpoint = 'https://graph.microsoft.com/v1.0/me'
 } = {}) {
-  const { accessToken } = useAcquireToken({ scopes: ['User.Read'] });
+  const { accessToken } = useAcquireToken({ scopes });
   const [graphData, setGraphData] = useState(null);
   const [error, setError] = useState(null);
 
