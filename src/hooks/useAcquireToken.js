@@ -2,69 +2,69 @@ import { useCallback, useEffect, useState } from 'react';
 import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 
 function useAcquireToken({
-    scopes = ['User.Read'],
-    account = null,
-    requestRefreshToken = false
+  scopes = ['User.Read'],
+  account = null,
+  requestRefreshToken = false
 }) {
-    const { instance, accounts } = useMsal();
-    const [accessToken, setAccessToken] = useState(null);
-    const isAuthenticated = useIsAuthenticated(account);
+  const { instance, accounts } = useMsal();
+  const [accessToken, setAccessToken] = useState(null);
+  const isAuthenticated = useIsAuthenticated(account);
 
-    const getData = useCallback(async () => {
-        if (isAuthenticated && (account || accounts.length > 0)) {
-            // Retrieve an access token
-            const request = {
-                account: account ?? accounts[0],
-                scopes
-            };
+  const getData = useCallback(async () => {
+    if (isAuthenticated && (account || accounts.length > 0)) {
+      // Retrieve an access token
+      const request = {
+        account: account ?? accounts[0],
+        scopes
+      };
 
-            try {
-                const response = await instance.acquireTokenSilent(request);
+      try {
+        const response = await instance.acquireTokenSilent(request);
 
-                checkTokenResponse(response);
-                return;
-            } catch (error) {
-                console.log(error?.message, error?.errorCode);
-                if (
-                    requestRefreshToken &&
-                    (error.errorCode === 'consent_required' ||
-                        error.errorCode === 'interaction_required' ||
-                        error.errorCode === 'login_required' ||
-                        error.errorCode === 'monitor_window_timeout')
-                ) {
-                    try {
-                        const response = await instance.acquireTokenRedirect(request);
-                        return checkTokenResponse(response);
-                    } catch {
-                        if (accessToken) setAccessToken(null);
-                        return null;
-                    }
-                }
-
-                if (accessToken) setAccessToken(null);
-                return null;
-            }
-        }
-    }, [accessToken, account, accounts, instance, isAuthenticated, requestRefreshToken, scopes]);
-
-    const checkTokenResponse = (response) => {
-        console.info({ response });
-
-        if (response.accessToken) {
-            setAccessToken(response.accessToken);
-            return response.accessToken;
+        checkTokenResponse(response);
+        return;
+      } catch (error) {
+        console.log(error?.message, error?.errorCode);
+        if (
+          requestRefreshToken &&
+          (error.errorCode === 'consent_required' ||
+            error.errorCode === 'interaction_required' ||
+            error.errorCode === 'login_required' ||
+            error.errorCode === 'monitor_window_timeout')
+        ) {
+          try {
+            const response = await instance.acquireTokenRedirect(request);
+            return checkTokenResponse(response);
+          } catch {
+            if (accessToken) setAccessToken(null);
+            return null;
+          }
         }
 
-        setAccessToken(null);
+        if (accessToken) setAccessToken(null);
         return null;
-    };
+      }
+    }
+  }, [accessToken, account, accounts, instance, isAuthenticated, requestRefreshToken, scopes]);
 
-    useEffect(() => {
-        getData();
-    }, [getData]);
+  const checkTokenResponse = (response) => {
+    console.info({ response });
 
-    // console.warn({ accessToken });
-    return { accessToken, getAccessToken: getData };
+    if (response.accessToken) {
+      setAccessToken(response.accessToken);
+      return response.accessToken;
+    }
+
+    setAccessToken(null);
+    return null;
+  };
+
+  useEffect(() => {
+    getData();
+  }, [getData]);
+
+  // console.warn({ accessToken });
+  return { accessToken, getAccessToken: getData };
 }
 
 export default useAcquireToken;
