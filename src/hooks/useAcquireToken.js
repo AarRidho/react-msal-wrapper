@@ -45,7 +45,15 @@ function useAcquireToken({
         return null;
       }
     }
-  }, [accessToken, account, accounts, instance, isAuthenticated, requestRefreshToken, scopes]);
+  }, [
+    accessToken,
+    account,
+    accounts,
+    instance,
+    isAuthenticated,
+    requestRefreshToken,
+    scopes
+  ]);
 
   const checkTokenResponse = (response) => {
     console.info({ response });
