@@ -3,7 +3,9 @@ import useAcquireToken from './useAcquireToken';
 
 function useGraph({
   scopes = ['User.Read'],
-  graphEndpoint = 'https://graph.microsoft.com/v1.0/me'
+  graphEndpoint = 'https://graph.microsoft.com/v1.0/me',
+  immediate = true,
+  headers = {}
 } = {}) {
   const { accessToken } = useAcquireToken({ scopes });
   const [graphData, setGraphData] = useState(null);
@@ -15,6 +17,7 @@ function useGraph({
         const response = await fetch(graphEndpoint, {
           method: 'GET',
           headers: {
+            ...headers,
             Authorization: 'Bearer ' + accessToken
           },
           signal: controller.signal
@@ -26,15 +29,15 @@ function useGraph({
         setError(error);
       }
     },
-    [graphEndpoint]
+    [graphEndpoint, headers]
   );
 
   useEffect(() => {
     const controller = new AbortController();
-    if (accessToken) getData(accessToken, controller);
+    if (accessToken && immediate) getData(accessToken, controller);
 
     return () => controller.abort();
-  }, [accessToken, getData]);
+  }, [accessToken, getData, immediate]);
 
   return { graphData, error };
 }
