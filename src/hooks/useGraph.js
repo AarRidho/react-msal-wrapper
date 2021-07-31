@@ -5,14 +5,14 @@ function useGraph({
   scopes = ['User.Read'],
   graphEndpoint = 'https://graph.microsoft.com/v1.0/me',
   immediate = true,
-  headers = {}
+  headers = null
 } = {}) {
   const { accessToken } = useAcquireToken({ scopes });
   const [graphData, setGraphData] = useState(null);
   const [error, setError] = useState(null);
 
   const getData = useCallback(
-    async (accessToken, controller) => {
+    async (accessToken, controller, headers) => {
       try {
         const response = await fetch(graphEndpoint, {
           method: 'GET',
@@ -29,15 +29,15 @@ function useGraph({
         setError(error);
       }
     },
-    [graphEndpoint, headers]
+    [graphEndpoint]
   );
 
   useEffect(() => {
     const controller = new AbortController();
-    if (accessToken && immediate) getData(accessToken, controller);
+    if (accessToken && immediate) getData(accessToken, controller, headers);
 
     return () => controller.abort();
-  }, [accessToken, getData, immediate]);
+  }, [accessToken, getData, headers, immediate]);
 
   return { graphData, error };
 }

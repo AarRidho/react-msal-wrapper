@@ -5,14 +5,14 @@ function useGraphPhoto({
   scopes = ['User.Read'],
   graphEndpoint = 'https://graph.microsoft.com/v1.0/me/photo/$value',
   immediate = true,
-  headers = {}
+  headers = null
 } = {}) {
   const { accessToken } = useAcquireToken({ scopes });
   const [photos, setPhotos] = useState(null);
   const [error, setError] = useState(null);
 
   const getData = useCallback(
-    async (accessToken, controller) => {
+    async (accessToken, controller, headers) => {
       // console.log({ accessToken });
 
       if (!accessToken) return;
@@ -26,10 +26,14 @@ function useGraphPhoto({
           signal: controller.signal
         });
 
+        // console.log('WOY');
+        // console.log(response);
         const blob = await response.blob();
+        // console.log(blob);
 
         const url = window.URL || window.webkitURL;
         const blobUrl = url.createObjectURL(blob);
+        // console.log({ url, blobUrl });
 
         setPhotos(blobUrl);
       } catch (error) {
@@ -37,15 +41,15 @@ function useGraphPhoto({
         setError(error);
       }
     },
-    [graphEndpoint, headers]
+    [graphEndpoint]
   );
 
   useEffect(() => {
     const controller = new AbortController();
-    if (accessToken && immediate) getData(accessToken, controller);
+    if (accessToken && immediate) getData(accessToken, controller, headers);
 
     return () => controller.abort();
-  }, [accessToken, getData, immediate]);
+  }, [accessToken, getData, headers, immediate]);
 
   return { photos, error };
 }
