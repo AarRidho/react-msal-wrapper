@@ -5,51 +5,43 @@ function useGraphPhoto({
   scopes = ['User.Read'],
   graphEndpoint = 'https://graph.microsoft.com/v1.0/me/photo/$value',
   immediate = true,
-  headers = null
+  ConsistencyLevel = 'eventual'
 } = {}) {
   const { accessToken } = useAcquireToken({ scopes });
   const [photos, setPhotos] = useState(null);
   const [error, setError] = useState(null);
 
   const getData = useCallback(
-    async (accessToken, controller, headers) => {
-      // console.log({ accessToken });
-
+    async (accessToken, controller) => {
       if (!accessToken) return;
-      try {
-        const response = await fetch(graphEndpoint, {
-          method: 'GET',
-          headers: {
-            ...headers,
-            Authorization: 'Bearer ' + accessToken
-          },
-          signal: controller.signal
-        });
+      const response = await fetch(graphEndpoint, {
+        method: 'GET',
+        headers: {
+          ConsistencyLevel,
+          Authorization: 'Bearer ' + accessToken
+        },
+        signal: controller.signal
+      });
 
-        // console.log('WOY');
-        // console.log(response);
-        const blob = await response.blob();
-        // console.log(blob);
-
-        const url = window.URL || window.webkitURL;
-        const blobUrl = url.createObjectURL(blob);
-        // console.log({ url, blobUrl });
-
-        setPhotos(blobUrl);
-      } catch (error) {
-        // console.log(error);
-        setError(error);
+      if (!response.ok) {
+        setError(response);
+        return;
       }
+
+      const blob = await response.blob();
+      const url = window.URL || window.webkitURL;
+      const blobUrl = url.createObjectURL(blob);
+      setPhotos(blobUrl);
     },
-    [graphEndpoint]
+    [ConsistencyLevel, graphEndpoint]
   );
 
   useEffect(() => {
     const controller = new AbortController();
-    if (accessToken && immediate) getData(accessToken, controller, headers);
+    if (accessToken && immediate) getData(accessToken, controller);
 
     return () => controller.abort();
-  }, [accessToken, getData, headers, immediate]);
+  }, [accessToken, getData, immediate]);
 
   return { photos, error };
 }

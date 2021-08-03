@@ -24,7 +24,7 @@ function useAcquireToken({
         checkTokenResponse(response);
         return;
       } catch (error) {
-        console.log(error?.message, error?.errorCode);
+        // console.log(error?.message, error?.errorCode);
         if (
           requestRefreshToken &&
           (error.errorCode === 'consent_required' ||
