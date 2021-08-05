@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useAcquireToken } from 'react-msal-wrapper';
+import useAcquireToken from './useAcquireToken';
 
 function useGraphPhoto({
   scopes = ['User.Read'],
