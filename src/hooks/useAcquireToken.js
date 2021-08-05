@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 
 function useAcquireToken({
@@ -9,6 +9,7 @@ function useAcquireToken({
   const { instance, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState(null);
   const isAuthenticated = useIsAuthenticated(account);
+  const controller = useRef(new AbortController());
 
   const getData = useCallback(async () => {
     if (isAuthenticated && (account || accounts.length > 0)) {
@@ -35,10 +36,7 @@ function useAcquireToken({
           try {
             const response = await instance.acquireTokenRedirect(request);
             return checkTokenResponse(response);
-          } catch {
-            if (accessToken) setAccessToken(null);
-            return null;
-          }
+          } catch {}
         }
 
         if (accessToken) setAccessToken(null);
@@ -57,6 +55,7 @@ function useAcquireToken({
 
   const checkTokenResponse = (response) => {
     // console.info({ response });
+    if (!controller.signal.aborted) return;
 
     if (response.accessToken) {
       setAccessToken(response.accessToken);
@@ -68,7 +67,12 @@ function useAcquireToken({
   };
 
   useEffect(() => {
+    const abortController = controller.current;
     getData();
+
+    return () => {
+      abortController.abort();
+    };
   }, [getData]);
 
   // console.warn({ accessToken });
