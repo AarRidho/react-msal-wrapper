@@ -21,9 +21,7 @@ function useAcquireToken({
 
       try {
         const response = await instance.acquireTokenSilent(request);
-
-        checkTokenResponse(response);
-        return;
+        return checkTokenResponse(response);
       } catch (error) {
         // console.log(error?.message, error?.errorCode);
         if (
@@ -54,8 +52,7 @@ function useAcquireToken({
   ]);
 
   const checkTokenResponse = (response) => {
-    // console.info({ response });
-    if (!controller.current.signal.aborted) return;
+    if (controller.current.signal.aborted) return;
 
     if (response.accessToken) {
       setAccessToken(response.accessToken);
@@ -70,12 +67,9 @@ function useAcquireToken({
     const abortController = controller.current;
     getData();
 
-    return () => {
-      abortController.abort();
-    };
+    return () => abortController.abort();
   }, [getData]);
 
-  // console.warn({ accessToken });
   return { accessToken, getAccessToken: getData };
 }
 
