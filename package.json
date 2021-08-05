@@ -57,7 +57,8 @@
     "react-scripts": "^3.4.1"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "exports": "./dist/index.js",
   "dependencies": {
