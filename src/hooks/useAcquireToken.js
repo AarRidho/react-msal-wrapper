@@ -55,7 +55,7 @@ function useAcquireToken({
 
   const checkTokenResponse = (response) => {
     // console.info({ response });
-    if (!controller.signal.aborted) return;
+    if (!controller.current.signal.aborted) return;
 
     if (response.accessToken) {
       setAccessToken(response.accessToken);
