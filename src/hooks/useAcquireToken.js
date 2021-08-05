@@ -56,7 +56,7 @@ function useAcquireToken({
   ]);
 
   const checkTokenResponse = (response) => {
-    console.info({ response });
+    // console.info({ response });
 
     if (response.accessToken) {
       setAccessToken(response.accessToken);
