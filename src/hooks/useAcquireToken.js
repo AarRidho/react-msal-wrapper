@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 
 function useAcquireToken({
@@ -9,50 +9,53 @@ function useAcquireToken({
   const { instance, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState(null);
   const isAuthenticated = useIsAuthenticated(account);
-  const controller = useRef(new AbortController());
 
-  const getData = useCallback(async () => {
-    if (isAuthenticated && (account || accounts.length > 0)) {
-      // Retrieve an access token
-      const request = {
-        account: account ?? accounts[0],
-        scopes
-      };
+  const getData = useCallback(
+    async (aborted) => {
+      if (isAuthenticated && (account || accounts.length > 0)) {
+        // Retrieve an access token
+        const request = {
+          account: account ?? accounts[0],
+          scopes
+        };
 
-      try {
-        const response = await instance.acquireTokenSilent(request);
-        return checkTokenResponse(response);
-      } catch (error) {
-        // console.log(error?.message, error?.errorCode);
-        if (
-          requestRefreshToken &&
-          (error.errorCode === 'consent_required' ||
-            error.errorCode === 'interaction_required' ||
-            error.errorCode === 'login_required' ||
-            error.errorCode === 'monitor_window_timeout')
-        ) {
-          try {
-            const response = await instance.acquireTokenRedirect(request);
-            return checkTokenResponse(response);
-          } catch {}
+        try {
+          const response = await instance.acquireTokenSilent(request);
+          return checkTokenResponse(response, aborted);
+        } catch (error) {
+          // console.log(error?.message, error?.errorCode);
+          if (
+            requestRefreshToken &&
+            (error.errorCode === 'consent_required' ||
+              error.errorCode === 'interaction_required' ||
+              error.errorCode === 'login_required' ||
+              error.errorCode === 'monitor_window_timeout')
+          ) {
+            try {
+              const response = await instance.acquireTokenRedirect(request);
+              return checkTokenResponse(response, aborted);
+              // eslint-disable-next-line no-empty
+            } catch {}
+          }
+
+          if (accessToken) setAccessToken(null);
+          return null;
         }
-
-        if (accessToken) setAccessToken(null);
-        return null;
       }
-    }
-  }, [
-    accessToken,
-    account,
-    accounts,
-    instance,
-    isAuthenticated,
-    requestRefreshToken,
-    scopes
-  ]);
+    },
+    [
+      accessToken,
+      account,
+      accounts,
+      instance,
+      isAuthenticated,
+      requestRefreshToken,
+      scopes
+    ]
+  );
 
-  const checkTokenResponse = (response) => {
-    if (controller.current.signal.aborted) return;
+  const checkTokenResponse = (response, aborted) => {
+    if (aborted) return;
 
     if (response.accessToken) {
       setAccessToken(response.accessToken);
@@ -64,10 +67,12 @@ function useAcquireToken({
   };
 
   useEffect(() => {
-    const abortController = controller.current;
-    getData();
+    let aborted = false;
+    getData(aborted);
 
-    return () => abortController.abort();
+    return () => {
+      aborted = true;
+    };
   }, [getData]);
 
   return { accessToken, getAccessToken: getData };
