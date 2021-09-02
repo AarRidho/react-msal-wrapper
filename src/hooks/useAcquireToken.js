@@ -1,18 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useIsAuthenticated, useMsal } from '@azure/msal-react';
+import { useMsal } from '@azure/msal-react';
+import {
+  InteractionRequiredAuthError,
+  InteractionStatus
+} from '@azure/msal-browser';
 
 function useAcquireToken({
   scopes = ['User.Read'],
   account = null,
   requestRefreshToken = false
 }) {
-  const { instance, accounts } = useMsal();
+  const { instance, accounts, inProgress } = useMsal();
   const [accessToken, setAccessToken] = useState(null);
-  const isAuthenticated = useIsAuthenticated(account);
 
   const getData = useCallback(
     async (aborted) => {
-      if (isAuthenticated && (account || accounts.length > 0)) {
+      if (
+        !accessToken &&
+        inProgress === InteractionStatus.None &&
+        (account || accounts.length > 0)
+      ) {
         // Retrieve an access token
         const request = {
           account: account ?? accounts[0],
@@ -29,13 +36,16 @@ function useAcquireToken({
             (error.errorCode === 'consent_required' ||
               error.errorCode === 'interaction_required' ||
               error.errorCode === 'login_required' ||
-              error.errorCode === 'monitor_window_timeout')
+              error.errorCode === 'monitor_window_timeout' ||
+              error instanceof InteractionRequiredAuthError)
           ) {
             try {
-              const response = await instance.acquireTokenRedirect(request);
+              const response = await instance.acquireTokenPopup(request);
               return checkTokenResponse(response, aborted);
               // eslint-disable-next-line no-empty
-            } catch {}
+            } catch (errorTokenPopup) {
+              console.log(error);
+            }
           }
 
           if (accessToken) setAccessToken(null);
@@ -47,8 +57,8 @@ function useAcquireToken({
       accessToken,
       account,
       accounts,
+      inProgress,
       instance,
-      isAuthenticated,
       requestRefreshToken,
       scopes
     ]
