@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMsal } from '@azure/msal-react';
 import {
   InteractionRequiredAuthError,
@@ -12,12 +12,12 @@ function useAcquireToken({
   prompt = 'select_account'
 }) {
   const { instance, accounts, inProgress } = useMsal();
-  const accessToken = useRef(null);
+  const [accessToken, setAccessToken] = useState(null);
 
   const getData = useCallback(
     async (aborted) => {
       if (
-        !accessToken.current &&
+        !accessToken &&
         inProgress === InteractionStatus.None &&
         (account || accounts.length > 0)
       ) {
@@ -50,12 +50,13 @@ function useAcquireToken({
             }
           }
 
-          if (accessToken.current) accessToken.current = null;
+          if (accessToken) setAccessToken(null);
           return null;
         }
       }
     },
     [
+      accessToken,
       account,
       accounts,
       inProgress,
@@ -70,11 +71,11 @@ function useAcquireToken({
     if (aborted) return;
 
     if (response.accessToken) {
-      accessToken.current = response.accessToken;
+      setAccessToken(response.accessToken);
       return response.accessToken;
     }
 
-    accessToken.current = null;
+    setAccessToken(null);
     return null;
   };
 
