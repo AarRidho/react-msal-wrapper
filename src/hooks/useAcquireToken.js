@@ -50,13 +50,12 @@ function useAcquireToken({
             }
           }
 
-          if (accessToken) accessToken.current = null;
+          if (accessToken.current) accessToken.current = null;
           return null;
         }
       }
     },
     [
-      accessToken,
       account,
       accounts,
       inProgress,
@@ -88,7 +87,7 @@ function useAcquireToken({
     };
   }, [getData]);
 
-  return { accessToken, getAccessToken: getData };
+  return { accessToken: accessToken.current, getAccessToken: getData };
 }
 
 export default useAcquireToken;
