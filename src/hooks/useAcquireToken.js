@@ -88,7 +88,7 @@ function useAcquireToken({
     };
   }, [getData]);
 
-  return { accessToken: accessToken.current, getAccessToken: getData };
+  return { accessToken, getAccessToken: getData };
 }
 
 export default useAcquireToken;
