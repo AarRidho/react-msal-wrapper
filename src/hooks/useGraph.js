@@ -15,7 +15,7 @@ function useGraph({
     const controller = new AbortController();
     abortController.current = controller;
 
-    return () => AbortController.abort();
+    return () => controller.abort();
   }, []);
 
   const getData = useCallback(async () => {
