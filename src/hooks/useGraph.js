@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useAcquireToken from './useAcquireToken';
 
 function useGraph({
@@ -10,34 +10,36 @@ function useGraph({
   const { accessToken } = useAcquireToken({ scopes });
   const [graphData, setGraphData] = useState(null);
   const [error, setError] = useState(null);
-
-  const getData = useCallback(
-    async (accessToken, controller, headers) => {
-      try {
-        const response = await fetch(graphEndpoint, {
-          method: 'GET',
-          headers: {
-            ...headers,
-            Authorization: 'Bearer ' + accessToken
-          },
-          signal: controller.signal
-        });
-        const body = await response.json();
-
-        setGraphData(body);
-      } catch (error) {
-        setError(error);
-      }
-    },
-    [graphEndpoint]
-  );
-
+  const abortController = useRef(null);
   useEffect(() => {
     const controller = new AbortController();
-    if (accessToken && immediate) getData(accessToken, controller, headers);
+    abortController.current = controller;
 
-    return () => controller.abort();
-  }, [accessToken, getData, headers, immediate]);
+    return () => AbortController.abort();
+  }, []);
+
+  const getData = useCallback(async () => {
+    const controller = abortController.current;
+    try {
+      const response = await fetch(graphEndpoint, {
+        method: 'GET',
+        headers: {
+          ...headers,
+          Authorization: 'Bearer ' + accessToken
+        },
+        signal: controller.signal
+      });
+      const body = await response.json();
+
+      setGraphData(body);
+    } catch (error) {
+      setError(error);
+    }
+  }, [accessToken, graphEndpoint, headers]);
+
+  useEffect(() => {
+    if (immediate) getData();
+  }, [getData, immediate]);
 
   return { graphData, error };
 }

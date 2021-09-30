@@ -13,7 +13,7 @@ function useAcquireToken({
 }) {
   const { instance, accounts, inProgress } = useMsal();
   const [accessToken, setAccessToken] = useState(null);
-  const abortController = useRef(new AbortController());
+  const abortController = useRef(null);
   useEffect(() => {
     const controller = new AbortController();
     abortController.current = controller;
