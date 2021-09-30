@@ -14,6 +14,12 @@ function useAcquireToken({
   const { instance, accounts, inProgress } = useMsal();
   const [accessToken, setAccessToken] = useState(null);
   const abortController = useRef(new AbortController());
+  useEffect(() => {
+    const controller = new AbortController();
+    abortController.current = controller;
+
+    return () => AbortController.abort();
+  }, []);
 
   const getData = useCallback(async () => {
     const AbortController = abortController.current;
@@ -79,12 +85,7 @@ function useAcquireToken({
   };
 
   useEffect(() => {
-    const AbortController = abortController.current;
     getData();
-
-    return () => {
-      AbortController.abort();
-    };
   }, [getData]);
 
   return { accessToken, getAccessToken: getData };
