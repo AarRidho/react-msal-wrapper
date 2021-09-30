@@ -16,6 +16,7 @@ function useAcquireToken({
   const abortController = useRef(new AbortController());
 
   const getData = useCallback(async () => {
+    const AbortController = abortController.current;
     if (
       !accessToken &&
       inProgress === InteractionStatus.None &&
@@ -30,7 +31,7 @@ function useAcquireToken({
 
       try {
         const response = await instance.acquireTokenSilent(request);
-        return checkTokenResponse(response, abortController);
+        return checkTokenResponse(response, AbortController);
       } catch (error) {
         // console.log(error?.message, error?.errorCode);
         if (
@@ -43,7 +44,7 @@ function useAcquireToken({
         ) {
           try {
             const response = await instance.acquireTokenPopup(request);
-            return checkTokenResponse(response, abortController);
+            return checkTokenResponse(response, AbortController);
             // eslint-disable-next-line no-empty
           } catch (errorTokenPopup) {
             console.log(error);
@@ -66,7 +67,7 @@ function useAcquireToken({
   ]);
 
   const checkTokenResponse = (response, abortController) => {
-    if (abortController.current.signal.aborted) return;
+    if (abortController.signal.aborted) return;
 
     if (response.accessToken) {
       setAccessToken(response.accessToken);
